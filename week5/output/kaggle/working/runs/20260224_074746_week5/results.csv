@@ -1,0 +1,2 @@
+run_dir,seed,device_cfg,device_actual,vae_latent_dim,vae_beta,vae_last_val_loss,clf_best_acc,probe_best_acc
+runs/20260224_074746_week5,42,cuda,cuda,16,1.0,100.24446724034563,0.9909,0.9893
