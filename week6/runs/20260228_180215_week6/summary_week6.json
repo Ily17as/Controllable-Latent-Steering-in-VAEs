@@ -1,0 +1,13 @@
+{
+  "num_pairs": 25600,
+  "latent_dim": 16,
+  "mean_delta_norm_before_norm": 4.9720330238342285,
+  "direction_norm_after_norm": 1.0,
+  "ink_gap_mean": 0.18680738680362702,
+  "orig_digit_acc": 0.9909,
+  "recon_orig_probe_margin": -0.4071966492652893,
+  "week5_run_dir": "../week5/output/kaggle/working/runs/20260224_074746_week5",
+  "vae_checkpoint": "../week5/output/kaggle/working/runs/20260224_074746_week5\\checkpoints\\vae_epoch020.pt",
+  "clf_checkpoint": "../week5/output/kaggle/working/runs/20260224_074746_week5\\checkpoints\\clf_best.pt",
+  "probe_checkpoint": "../week5/output/kaggle/working/runs/20260224_074746_week5\\checkpoints\\probe_best.pt"
+}

@@ -1,0 +1,34 @@
+{
+  "seed": 42,
+  "device": "cuda",
+  "run": {
+    "root": "runs",
+    "tag": "week5"
+  },
+  "data": {
+    "batch_size": 128,
+    "num_workers": 0,
+    "subset": null
+  },
+  "vae": {
+    "latent_dim": 16,
+    "lr": 0.001,
+    "epochs": 20,
+    "beta": 1.0,
+    "recon_loss": "bce",
+    "ckpt_every": 5
+  },
+  "clf": {
+    "lr": 0.001,
+    "epochs": 5
+  },
+  "probe": {
+    "lr": 0.001,
+    "epochs": 5,
+    "aug": {
+      "thin_k": 1,
+      "thick_k": 1,
+      "blend": 0.2
+    }
+  }
+}
