@@ -1,173 +1,224 @@
 # Controllable Latent Steering in VAEs
 
-A notebook-first research project on **controllable latent editing** in variational autoencoders (VAEs), with a focus on one practical question:
+A notebook-first research repository on **controllable latent editing** in variational autoencoders, centered on one practical question:
 
-> Can we increase a target attribute in latent space without destroying the content we want to preserve?
+> How far can we push a target attribute in latent space **without breaking the content we want to preserve**?
 
-The project starts on **MNIST** with stroke-thickness control and then extends to **dSprites** with an explicit **out-of-distribution (OOD)** split. Across the full study, the main conclusion is consistent: **reliable steering depends more on safe step selection and representation quality than on local directions alone**.
+The main experimental path starts on **MNIST** with stroke-thickness steering, then extends to **dSprites** with an explicit **out-of-distribution (OOD)** split. The overall conclusion is consistent across the project:
+
+- a **global direction** already works surprisingly well,
+- **local directions** help, but not dramatically on their own,
+- the strongest improvement comes from **safe per-sample step selection**,
+- representation quality matters at least as much as the direction family.
 
 ---
 
-## Project summary
+## TL;DR
 
-The core steering rule is
+This repository studies **reliable controllable editing** rather than just visually plausible latent traversals.
+
+The core update is
 
 \[
-z' = z + \alpha\, d(z),
+z' = z + \alpha \, d(z),
 \]
 
-where:
+where `z` is a latent code, `d(z)` is a steering direction, and `α` is the step size.
 
-- `z` is the latent code of an input sample,
-- `d(z)` is a steering direction,
-- `α` is the edit magnitude.
-
-The project compares three increasingly strong versions of this idea:
+The project compares three versions of this idea:
 
 1. **Global steering** — one shared direction for all samples.
-2. **Local steering** — cluster-specific or neighborhood-conditioned directions.
+2. **Local steering** — cluster-conditioned or neighborhood-conditioned directions.
 3. **Safe automatic steering** — choose `α*` per sample under preservation constraints.
 
-The experiments are organized as a staged weekly research program:
-
-- **Week 5** — baseline MNIST VAE + digit classifier + thickness probe
-- **Week 6** — global latent steering on MNIST
-- **Week 7** — clustered local directions on MNIST
-- **Week 8** — safe per-sample step selection `α*`
-- **Week 9** — focused `β`-VAE ablation
-- **Week 10** — dSprites OOD transfer study
+The main finding is simple: **choosing the step safely matters more than making the direction local**.
 
 ---
 
-## Main findings
+## What is in this repository
+
+This archive now contains **two related tracks**:
+
+### 1) Main image-steering research track
+The primary research path, developed week by week:
+
+- **Week 5** — MNIST baseline VAE, classifier, and attribute probe
+- **Week 6** — global latent steering on MNIST
+- **Week 7** — local / clustered steering on MNIST
+- **Week 8** — safe per-sample step selection `α*`
+- **Week 9** — `β`-VAE ablation
+- **Week 10** — dSprites transfer and OOD experiments
+- **Week 11** — aggregation tables and comparison summaries
+- **Week 12** — final paper material and independent-preservation notebook
+
+### 2) Exploratory text-steering branch
+An additional directory with a separate exploratory line:
+
+- `steering-on-text-corpus/` — text detox steering notebook, paper files, and packaged outputs
+
+So the repository is not only a single sequence of MNIST notebooks anymore; it also contains **later aggregation artifacts** and **a text-steering side branch**.
+
+---
+
+## Main takeaways
 
 ### MNIST
 
-- A baseline VAE with latent dimension 16 is strong enough to support controlled edits.
-- A **global direction** already increases thickness with only moderate digit-identity loss for small-to-medium `α`.
-- **Local directions** help, but only **slightly** in this setup.
-- The biggest improvement comes from **automatic per-sample step selection**, not from locality alone.
-- A stronger KL penalty in the tested `β`-VAE sweep **did not improve** controllability overall.
+- A reasonably good latent representation is already enough to support targeted edits.
+- A **global direction** increases thickness while keeping digit identity mostly stable for moderate edits.
+- **Local steering** improves the tradeoff, but only modestly in this setup.
+- The biggest reliability gain comes from **automatic per-sample step selection** rather than locality alone.
+- In the tested sweep, increasing `β` too much hurts reconstruction and does **not** improve controllability overall.
 
-### dSprites OOD
+### dSprites / OOD
 
-- The steering pipeline transfers beyond MNIST to a factorized synthetic dataset.
-- Under held-out orientations, **auto-steering** preserves shape far better than aggressive fixed-step edits.
-- OOD transfer is real, but still limited by representation quality and probe quality.
+- The steering pipeline transfers beyond MNIST to a more structured synthetic dataset.
+- Fixed-step steering can give larger raw target gain, but it also increases drift and harms preservation.
+- **Auto-steering** is much more stable and preserves identity-like factors better, including on OOD splits.
 
 ---
 
 ## Results snapshot
 
-These are the headline numbers consolidated in the final report.
+The repository contains several result summaries across weeks. The headline picture is:
 
-| Stage | Setting | Key result |
+| Stage | Setting | Headline result |
 |---|---|---|
 | Week 5 | MNIST baseline | digit classifier acc = **0.9909**, thickness probe acc = **0.9893** |
 | Week 6 | Global steering | at `α = 1.0`: digit acc = **0.9671**, probe gain = **+2.6281** |
-| Week 7 | Local steering | best small-budget tradeoff: `local_k16`, `α = 1.0`, digit acc = **0.9673**, probe gain = **+2.7005** |
+| Week 7 | Local steering | `local_k16`, `α = 1.0`: digit acc = **0.9673**, probe gain = **+2.7005** |
 | Week 8 | Safe auto-step | best policy: digit acc = **0.9722**, consistency = **1.0000**, probe gain = **+2.9347** |
 | Week 9 | `β`-VAE ablation | reconstruction digit acc drops from **0.9569** (`β=1`) to **0.8590** (`β=4`) |
-| Week 10 | dSprites OOD | tuned global auto-steering on OOD: shape acc = **0.6838**, consistency = **1.0000**, scale gain = **1.1926** |
+| Week 10–11 | dSprites OOD | auto-steering preserves much better than fixed-step baselines in aggregated summaries |
 
-The most important qualitative result is this:
+For the dSprites comparison tables stored in `week11/`, the pattern is especially clear:
 
-- **fixed local directions > global**, but only marginally;
-- **safe `α*` > fixed `α`**, by a clear margin on reliability.
+- **fixed** steering often produces higher raw target gain,
+- **auto** steering gives much better preservation consistency,
+- the global-vs-local gap is smaller than the fixed-vs-auto gap.
+
+That is the main research message of the repository.
 
 ---
 
-## Repository structure
+## Repository layout
 
 ```text
 .
 ├── README.md
 ├── LICENSE
-├── latent_steering_paper_v6.pdf
+├── latent_steering_paper_v8.pdf
 ├── week5/
-│   ├── week5-genai.ipynb
-│   └── output/...                # archived baseline run artifacts
+│   └── week5-genai.ipynb
 ├── week6/
 │   ├── week6.ipynb
-│   ├── Week_6_Memo.md
-│   └── runs/...                  # archived global-steering outputs
+│   └── Week_6_Memo.md
 ├── week7/
-│   ├── week7.ipynb
-│   └── runs/.../memo_week7.md
+│   └── week7.ipynb
 ├── week8/
-│   ├── week8.ipynb
-│   └── runs/.../memo_week8.md
+│   └── week8.ipynb
 ├── week9/
-│   ├── week9.ipynb
-│   └── runs/.../memo_week9.md
-└── week10/
-    ├── week10.ipynb
-    ├── week10_vae_tuned.ipynb
-    ├── week10_local_steering.ipynb
-    ├── memo_baseline.md
-    ├── memo_vae_tuned.md
-    └── memo_with_local_steering.md
+│   └── week9.ipynb
+├── week10/
+│   ├── week10.ipynb
+│   ├── week10_vae_tuned.ipynb
+│   ├── week10_local_steering.ipynb
+│   ├── memo_baseline.md
+│   ├── memo_vae_tuned.md
+│   ├── memo_with_local_steering.md
+│   ├── output.zip
+│   ├── output_vae_tuned.zip
+│   ├── output_local_steering.zip
+│   └── dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz
+├── week11/
+│   ├── clean_comparison_table.csv
+│   ├── final_table_pretty.csv
+│   ├── headline_rows.csv
+│   ├── mean_std_summary.csv
+│   ├── latent_steering_paper_v6.pdf
+│   ├── latent_steering_paper_v7_fixed.pdf
+│   ├── week10-local-steering.ipynb
+│   ├── week10-vae-tuned4790739c79.ipynb
+│   └── week11_ready_for_aggregation.zip
+├── week12/
+│   ├── latent_steering_paper_v8.pdf
+│   └── week11_independent_preservation.ipynb
+└── steering-on-text-corpus/
+    ├── weekx-text-detox-steering (5).ipynb
+    ├── text_detox_steering_paper.tex
+    ├── text_detox_steering_paper.pdf
+    ├── text_detox_paper_package.zip
+    └── output (7).zip
 ```
-
-This is a **research repository**, not a packaged library. The main artifacts are:
-
-- notebooks,
-- archived run outputs,
-- short weekly memos,
-- the consolidated final paper.
 
 ---
 
-## What each week does
+## Recommended reading order
 
-### Week 5 — Baseline representation on MNIST
-Builds the starting point:
+### If you want the full story quickly
+1. Read **`latent_steering_paper_v8.pdf`** in the repository root.
+2. Check **`week11/final_table_pretty.csv`** for aggregated dSprites comparisons.
+3. Open **Week 8** and **Week 10** notebooks if you want the most important experimental logic.
 
-- convolutional VAE,
-- digit classifier,
-- thickness probe,
-- latent-space sanity checks and reconstructions.
+### If you want the full experimental progression
+1. `week5/week5-genai.ipynb`
+2. `week6/week6.ipynb`
+3. `week7/week7.ipynb`
+4. `week8/week8.ipynb`
+5. `week9/week9.ipynb`
+6. `week10/week10.ipynb`
+7. `week10/week10_vae_tuned.ipynb`
+8. `week10/week10_local_steering.ipynb`
+9. `week11/*.csv`
+10. `week12/week11_independent_preservation.ipynb`
 
-Notebook: `week5/week5-genai.ipynb`
+### If you only care about the text-steering branch
+Go directly to:
 
-### Week 6 — Global latent steering
-Learns one global thickness direction from paired latent differences and evaluates the tradeoff between:
+- `steering-on-text-corpus/weekx-text-detox-steering (5).ipynb`
+- `steering-on-text-corpus/text_detox_steering_paper.pdf`
 
-- target change (probe margin),
-- digit preservation,
-- visual plausibility.
+---
 
-Notebook: `week6/week6.ipynb`
+## How the steering works
 
-### Week 7 — Local directions
-Tests the piecewise-linearity hypothesis by replacing one global direction with cluster-specific local directions.
+The common template is:
 
-Notebook: `week7/week7.ipynb`
+1. **Encode** an input into latent space.
+2. **Estimate a steering direction** from paired examples, cluster structure, or local neighborhoods.
+3. **Move in latent space** with either a fixed step `α` or an automatically selected `α*`.
+4. **Decode** the edited latent.
+5. **Evaluate both target gain and preservation**.
 
-### Week 8 — Safe automatic step selection
-Replaces a single fixed step with **per-sample discrete search** over candidate step sizes and chooses `α*` under preservation constraints.
+This last step is essential. The project does not treat “the image changed” as a success criterion.
 
-Notebook: `week8/week8.ipynb`
+---
 
-### Week 9 — `β`-VAE comparison
-Checks whether stronger latent regularization improves steering or just damages reconstruction.
+## Evaluation logic
 
-Notebook: `week9/week9.ipynb`
+### MNIST metrics
 
-### Week 10 — dSprites OOD extension
-Moves from MNIST to a structured factor dataset with held-out orientations.
+- **Probe gain / margin** — did thickness increase?
+- **Digit accuracy** — was digit identity preserved?
+- **Digit consistency** — did the predicted digit stay unchanged after steering?
+- **Feature drift** — how far did the edited sample move from the reconstruction?
 
-There are three week-10 variants:
+### dSprites metrics
 
-- `week10/week10.ipynb` — baseline dSprites experiment,
-- `week10/week10_vae_tuned.ipynb` — tuned global model,
-- `week10/week10_local_steering.ipynb` — local steering on dSprites.
+- **Target gain** — did the intended factor move in the desired direction?
+- **Preservation accuracy** — was the preserved factor still correct?
+- **Preservation consistency** — did the preserved attribute remain unchanged?
+- **Drift / objective** — how expensive the edit was in reconstruction-like terms.
+
+This is why the project is about **reliable controllability**, not just pretty latent traversals.
 
 ---
 
 ## Environment
 
-The notebooks import the following Python packages:
+This is a **notebook-first research repo**, not a packaged library. There is no single official `requirements.txt` in the root, so the simplest setup is manual.
+
+### Core packages used across the image-steering notebooks
 
 - `torch`
 - `torchvision`
@@ -179,7 +230,13 @@ The notebooks import the following Python packages:
 - `tqdm`
 - `jupyter`
 
-A minimal setup looks like this:
+### Optional packages used in the text-steering branch
+
+- `datasets`
+- `transformers`
+- `sentence-transformers`
+
+### Minimal setup
 
 ```bash
 python -m venv .venv
@@ -187,107 +244,101 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install torch torchvision numpy pandas matplotlib scikit-learn scipy tqdm notebook
 ```
 
+For the text-steering branch, additionally install:
+
+```bash
+pip install datasets transformers sentence-transformers
+```
+
 ---
 
 ## Data
 
 ### MNIST
-MNIST is loaded through `torchvision` and downloads automatically in the baseline notebook.
+MNIST is loaded through `torchvision` and downloads automatically in the relevant notebooks.
 
 ### dSprites
-The dSprites experiments expect the official `.npz` file to be available locally. In the week-10 notebooks, the path is controlled by `dsprites_npz_path`, so you may need to edit that value before running the notebook on your machine.
+The dSprites experiments use the official `.npz` dataset file. In this archive, a copy is present at:
+
+- `week10/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz`
+
+Some notebooks still expect a manually specified variable such as `dsprites_npz_path`, so you may need to edit that path locally before running them.
 
 ---
 
-## How to reproduce the workflow
+## Running the notebooks
 
-Because the project is notebook-first, the intended workflow is straightforward:
-
-1. Start with **Week 5** to train or inspect the baseline representation.
-2. Run **Week 6** to build and evaluate the global steering direction.
-3. Run **Week 7** to compare global vs local directions.
-4. Run **Week 8** to evaluate automatic safe step selection.
-5. Run **Week 9** for the `β`-VAE comparison.
-6. Run **Week 10** for the dSprites OOD extension.
-
-In practice:
+After setting up the environment:
 
 ```bash
 jupyter notebook
 ```
 
-Then open the relevant notebook and execute cells top-to-bottom.
+Then execute notebooks top-to-bottom.
+
+A practical order is:
+
+1. start from **Week 5**,
+2. move to **Week 6–8** for the main MNIST steering story,
+3. use **Week 9** for the `β`-VAE check,
+4. use **Week 10–12** for dSprites transfer, aggregation, and final paper artifacts.
 
 ---
 
-## Evaluation logic
+## Important artifacts
 
-The project does **not** treat a visually noticeable edit as sufficient. Steering is evaluated through explicit metrics.
+### Final research write-up
+- `latent_steering_paper_v8.pdf`
+- `week12/latent_steering_paper_v8.pdf`
 
-### MNIST metrics
+### Weekly notes and summaries
+- `week6/Week_6_Memo.md`
+- `week10/memo_baseline.md`
+- `week10/memo_vae_tuned.md`
+- `week10/memo_with_local_steering.md`
 
-- **Probe margin / gain** — did the thickness attribute increase?
-- **Digit accuracy** — was digit identity preserved?
-- **Digit consistency** — did the predicted digit stay unchanged after editing?
-- **Feature drift** — how far did the edit move away from the reconstruction in feature space?
+### Aggregated result tables
+- `week11/clean_comparison_table.csv`
+- `week11/final_table_pretty.csv`
+- `week11/headline_rows.csv`
+- `week11/mean_std_summary.csv`
 
-### dSprites metrics
-
-- **Scale gain** — did scale increase as intended?
-- **Shape accuracy / consistency** — was shape preserved?
-- **Image drift** — how far did the steered image move from the reconstruction?
-
-This is what makes the project about **reliable controllability**, not just latent traversals.
-
----
-
-## Why the project matters
-
-Many latent-edit demos look convincing because they move in some direction and change the image. That is not enough. A useful edit should be:
-
-- **targeted** — the intended factor changes,
-- **stable** — the edit behaves predictably across samples,
-- **safe** — preserved content stays preserved,
-- **transferable** — the method does not collapse outside the easiest split.
-
-This repository studies exactly that transition: from simple latent arithmetic to **constraint-aware controllable editing**.
+### Text-steering materials
+- `steering-on-text-corpus/text_detox_steering_paper.pdf`
+- `steering-on-text-corpus/text_detox_steering_paper.tex`
+- `steering-on-text-corpus/weekx-text-detox-steering (5).ipynb`
 
 ---
 
-## Final paper
+## Current limitations
 
-The consolidated write-up is included here:
+The repository is intentionally closer to a **research logbook** than to a polished benchmark package.
 
-- `latent_steering_paper_v6.pdf`
+Main limitations:
 
-It summarizes the full research trajectory, key tables, proposition-level framing, and the final interpretation of the results.
+- most work is organized as notebooks rather than scripts,
+- some outputs are stored as zipped run artifacts,
+- experiment interfaces are not yet fully standardized,
+- controllability still depends strongly on representation quality and proxy metrics,
+- the OOD setting is meaningful, but still controlled rather than fully real-world.
 
----
-
-## Limitations
-
-This repository is intentionally transparent about its limits:
-
-- the codebase is notebook-based rather than a cleaned research package;
-- some later-week results are summarized in memos and the final paper rather than exported as a fully standardized benchmark suite inside the repo root;
-- probe quality and representation quality still limit how far steering can be trusted;
-- the OOD setting in dSprites is meaningful, but still relatively controlled.
-
-These limits are part of the project, not something hidden from it.
+These are not hidden issues; they are part of the actual state of the project.
 
 ---
 
-## Possible next steps
+## Good next steps
 
-Good follow-up directions include:
+Natural follow-up directions include:
 
-- replacing proxy safety metrics with stronger semantic similarity constraints,
-- learning directions with explicit preservation objectives,
-- extending from notebook experiments to a reproducible benchmark script pipeline,
-- testing on richer datasets with stronger attribute supervision or disentanglement.
+- stronger preservation objectives,
+- better semantic safety constraints,
+- standardized experiment scripts instead of notebook-only pipelines,
+- multi-seed reporting everywhere,
+- richer datasets and harder OOD settings,
+- cleaner packaging of the text-steering branch as a separate subproject.
 
 ---
 
 ## License
 
-This repository is released under the MIT License. See `LICENSE` for details.
+This repository is released under the **MIT License**. See `LICENSE` for details.
